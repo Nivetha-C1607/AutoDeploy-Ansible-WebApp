@@ -1,0 +1,32 @@
+
+- name: Deploy AutoDeploy Web Dashboard
+  hosts: localhost
+  connection: local
+  become: false
+
+  vars:
+    app_source: "{{ playbook_dir }}/templates/index.html"
+    web_root: "{{ playbook_dir }}/deployed_site"
+
+  tasks:
+    - name: Create deployment directory
+      ansible.builtin.file:
+        path: "{{ web_root }}"
+        state: directory
+        mode: "0755"
+
+    - name: Deploy AutoDeploy dashboard
+      ansible.builtin.copy:
+        src: "{{ app_source }}"
+        dest: "{{ web_root }}/index.html"
+        mode: "0644"
+
+    - name: Verify deployed webpage
+      ansible.builtin.stat:
+        path: "{{ web_root }}/index.html"
+      register: deployed_page
+
+    - name: Display deployment result
+      ansible.builtin.debug:
+        msg: "AutoDeploy dashboard deployed successfully!"
+      when: deployed_page.stat.exists

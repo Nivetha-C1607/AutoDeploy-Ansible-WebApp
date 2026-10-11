@@ -1,0 +1,30 @@
+
+name: AutoDeploy Demo Application
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Run Ansible deployment
+        run: |
+          ansible-playbook deploy.yml
+
+      - name: Verify deployed application
+        run: |
+          test -f deployed_site/index.html
+          echo "AutoDeploy completed successfully!"
