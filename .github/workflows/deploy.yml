@@ -3,6 +3,20 @@ name: AutoDeploy Demo Application
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: "Choose the deployment target"
+        required: true
+        type: choice
+        options:
+          - demo
+          - test
+        default: demo
+      deployment_note:
+        description: "Optional note for this deployment"
+        required: false
+        type: string
+        default: "Triggered manually"
 
 permissions:
   contents: read
@@ -14,6 +28,11 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
+
+      - name: Show deployment request
+        run: |
+          echo "Target: ${{ inputs.deployment_target }}"
+          echo "Note: ${{ inputs.deployment_note }}"
 
       - name: Install Ansible
         run: |
