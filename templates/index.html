@@ -4,230 +4,374 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AutoDeploy | Deployment Dashboard</title>
-
+<title>AutoDeploy | Smart Deployment Dashboard</title>
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root {
+  --bg:#0b1120; --panel:#111b2e; --border:#263449;
+  --text:#e5e7eb; --muted:#94a3b8; --teal:#5eead4;
+  --purple:#c4b5fd; --blue:#60a5fa; --red:#fca5a5;
 }
-
-body {
-    font-family: Arial, sans-serif;
-    background: #0b1120;
-    color: #e5e7eb;
-    min-height: 100vh;
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:Arial,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+header { padding:20px 5%; background:var(--panel); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.logo { color:var(--teal); font-size:25px; font-weight:bold; }
+.badge { background:#123b35; color:var(--teal); padding:8px 13px; border-radius:20px; font-size:12px; }
+.layout { display:grid; grid-template-columns:210px minmax(0,1fr); min-height:85vh; }
+aside { background:#0e192b; border-right:1px solid var(--border); padding:20px 12px; }
+.navbtn { display:block; width:100%; text-align:left; border:0; background:transparent; color:#b8c7dc; padding:13px; border-radius:8px; cursor:pointer; margin-bottom:5px; font-size:14px; }
+.navbtn:hover,.navbtn.active { background:#1e3049; color:var(--teal); }
+main { padding:30px; min-width:0; }
+.page { display:none; }
+.page.active { display:block; }
+h1 { font-size:30px; margin-bottom:8px; }
+h2 { font-size:18px; margin-bottom:16px; }
+h3 { font-size:14px; color:var(--muted); margin-bottom:12px; }
+.subtitle { color:var(--muted); line-height:1.6; margin-bottom:24px; }
+.stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:15px; margin-bottom:20px; }
+.card,.panel { background:var(--panel); border:1px solid var(--border); border-radius:13px; padding:21px; min-width:0; }
+.value { font-size:25px; font-weight:bold; }
+.green { color:var(--teal); } .purple { color:var(--purple); }
+.blue { color:var(--blue); } .red { color:var(--red); }
+.hint { color:var(--muted); font-size:12px; margin-top:8px; line-height:1.5; }
+.twocol { display:grid; grid-template-columns:1.3fr 1fr; gap:18px; }
+.formgrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.field { margin-bottom:15px; }
+label { display:block; font-size:13px; margin-bottom:8px; color:#cbd5e1; }
+input,select { width:100%; background:var(--bg); border:1px solid #33445d; color:var(--text); border-radius:8px; padding:12px; font-size:14px; }
+button.action { background:#0d9488; color:white; padding:12px 18px; border:0; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; }
+button.action:hover { background:#0f766e; }
+button:disabled { opacity:.6; cursor:wait; }
+button.secondary { background:#24344b; color:white; border:0; border-radius:8px; padding:10px 14px; cursor:pointer; }
+.demo-note { border:1px solid #65502a; background:#2a2419; color:#fcd88a; padding:12px; border-radius:8px; font-size:12px; line-height:1.6; margin-top:15px; }
+.result { display:none; padding:12px; border-radius:8px; margin-top:14px; font-size:13px; line-height:1.5; }
+.result.show { display:block; }
+.result.ok { background:#123b35; color:var(--teal); }
+.result.info { background:#1d2d49; color:#bfdbfe; }
+.progresswrap { display:none; margin-top:18px; }
+.progresswrap.show { display:block; }
+.progresshead { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:8px; }
+.track { height:8px; background:#263449; border-radius:20px; overflow:hidden; }
+.bar { height:100%; width:0; background:linear-gradient(90deg,#0d9488,#5eead4); transition:width .4s; }
+.panelhead { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:15px; }
+.panelhead h2 { margin:0; }
+.linkbtn { border:0; background:none; color:var(--teal); cursor:pointer; }
+.logrow { display:grid; grid-template-columns:75px minmax(0,1fr) auto; gap:12px; align-items:start; padding:14px 0; border-top:1px solid var(--border); font-size:13px; }
+.tag { display:inline-block; border-radius:20px; padding:5px 8px; font-size:11px; text-align:center; }
+.tag.success { background:#123b35; color:var(--teal); }
+.tag.running { background:#1e3353; color:#93c5fd; }
+.tag.demo { background:#3d3018; color:#fcd34d; }
+.logtime { color:#64748b; font-size:11px; white-space:nowrap; }
+.empty { padding:20px 0; text-align:center; color:var(--muted); font-size:13px; }
+.tablewrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; min-width:540px; }
+th,td { text-align:left; padding:13px 10px; border-bottom:1px solid var(--border); font-size:12px; }
+th { color:var(--muted); }
+.info-list { list-style:none; }
+.info-list li { padding:13px 0; border-bottom:1px solid var(--border); }
+.info-list strong,.info-list span { display:block; font-size:13px; }
+.info-list span { color:var(--muted); margin-top:5px; font-size:12px; }
+.settingsrow { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:16px 0; border-bottom:1px solid var(--border); }
+.settingsrow p { color:var(--muted); font-size:12px; line-height:1.5; margin-top:5px; }
+footer { text-align:center; padding:22px; color:#64748b; font-size:12px; }
+.toast { display:none; position:fixed; right:20px; bottom:20px; background:#172b43; border:1px solid #38506d; border-radius:10px; padding:14px; z-index:10; font-size:13px; }
+.toast.show { display:block; }
+@media(max-width:1000px) {
+  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .twocol { grid-template-columns:1fr; }
 }
-
-header {
-    padding: 22px 7%;
-    background: #111b2e;
-    border-bottom: 1px solid #263449;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    color: #5eead4;
-    font-size: 25px;
-    font-weight: bold;
-}
-
-.badge {
-    background: #123b35;
-    color: #5eead4;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-}
-
-main {
-    max-width: 1100px;
-    margin: 50px auto;
-    padding: 0 22px;
-}
-
-h1 {
-    font-size: 34px;
-    margin-bottom: 12px;
-}
-
-.subtitle {
-    color: #94a3b8;
-    margin-bottom: 35px;
-    line-height: 1.6;
-}
-
-.cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-}
-
-.card {
-    background: #111b2e;
-    border: 1px solid #263449;
-    padding: 25px;
-    border-radius: 14px;
-}
-
-.card h3 {
-    color: #94a3b8;
-    font-size: 15px;
-    margin-bottom: 18px;
-}
-
-.value {
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.green {
-    color: #5eead4;
-}
-
-.purple {
-    color: #c4b5fd;
-}
-
-.section {
-    background: #111b2e;
-    border: 1px solid #263449;
-    padding: 25px;
-    margin-top: 25px;
-    border-radius: 14px;
-}
-
-.section h2 {
-    font-size: 19px;
-    margin-bottom: 18px;
-}
-
-.activity {
-    color: #94a3b8;
-    line-height: 2;
-    font-size: 14px;
-}
-
-button {
-    background: #0d9488;
-    color: white;
-    padding: 12px 22px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    margin-top: 20px;
-}
-
-button:hover {
-    background: #0f766e;
-}
-
-#message {
-    color: #5eead4;
-    margin-top: 15px;
-    font-size: 14px;
-}
-
-footer {
-    text-align: center;
-    padding: 25px;
-    color: #64748b;
-    font-size: 13px;
-}
-
-@media (max-width: 600px) {
-    header {
-        padding: 18px;
-        gap: 12px;
-    }
-
-    .logo {
-        font-size: 21px;
-    }
-
-    h1 {
-        font-size: 27px;
-    }
+@media(max-width:650px) {
+  .layout { grid-template-columns:1fr; }
+  aside { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-right:0; border-bottom:1px solid var(--border); padding:10px; }
+  main { padding:18px 13px; }
+  h1 { font-size:26px; }
+  .formgrid { grid-template-columns:1fr; gap:0; }
+  .logrow { grid-template-columns:68px minmax(0,1fr); }
+  .logtime { grid-column:2; }
+  .badge { font-size:11px; }
 }
 </style>
 </head>
-
 <body>
-
 <header>
-    <div class="logo">⚡ AutoDeploy</div>
-    <div class="badge">● Dashboard Online</div>
+  <div><div class="logo">⚡ AutoDeploy</div><div class="hint">Smart Deployment Dashboard</div></div>
+  <div class="badge">● Dashboard Online</div>
 </header>
 
+<div class="layout">
+<aside>
+  <button class="navbtn active" data-page="overview">▦ &nbsp; Overview</button>
+  <button class="navbtn" data-page="deployments">🚀 &nbsp; Deployments</button>
+  <button class="navbtn" data-page="environments">▣ &nbsp; Environments</button>
+  <button class="navbtn" data-page="activity">◷ &nbsp; Activity Logs</button>
+  <button class="navbtn" data-page="settings">⚙ &nbsp; Settings</button>
+  <p class="hint" style="padding:15px 10px;line-height:1.8">Powered by Ansible and GitHub Actions<br>Frontend demo mode</p>
+</aside>
+
 <main>
-    <h1>Deployment Dashboard</h1>
-    <p class="subtitle">
-        Monitor your application deployment in one place.
-        Simple, organized, and powered by automation.
-    </p>
+<section class="page active" id="page-overview">
+  <h1>Deployment Overview</h1>
+  <p class="subtitle">Monitor your application deployment workflow in one place.</p>
 
-    <div class="cards">
-        <div class="card">
-            <h3>Deployment Method</h3>
-            <div class="value green">Ansible</div>
-        </div>
+  <div class="stats">
+    <div class="card"><h3>Recorded deployments</h3><div class="value" id="total">0</div><div class="hint">This page session</div></div>
+    <div class="card"><h3>Successful simulations</h3><div class="value green" id="success">0</div><div class="hint">Demo runs completed</div></div>
+    <div class="card"><h3>Failed runs</h3><div class="value red" id="failed">0</div><div class="hint">Recorded failures</div></div>
+    <div class="card"><h3>Deployment tool</h3><div class="value purple">Ansible</div><div class="hint">Workflow runs separately in GitHub Actions</div></div>
+  </div>
 
-        <div class="card">
-            <h3>Application Status</h3>
-            <div class="value green" id="appStatus">Ready</div>
+  <div class="twocol">
+    <div class="panel">
+      <h2>Quick deployment</h2>
+      <p class="subtitle">Choose a target and release to simulate a deployment.</p>
+      <form id="deployForm">
+        <div class="formgrid">
+          <div class="field">
+            <label for="environment">Environment</label>
+            <select id="environment">
+              <option>Development</option>
+              <option>Testing</option>
+              <option>Demo</option>
+              <option>Production (simulation only)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="version">Version / release</label>
+            <input id="version" value="v1.0.0" maxlength="40" required>
+          </div>
         </div>
-
-        <div class="card">
-            <h3>Environment</h3>
-            <div class="value purple">Development</div>
+        <div class="field">
+          <label for="note">Deployment note (optional)</label>
+          <input id="note" placeholder="e.g. Verify dashboard release" maxlength="120">
         </div>
+        <button class="action" id="deployButton" type="submit">🚀 &nbsp; Prepare deployment</button>
+        <div class="result info" id="result" role="status" aria-live="polite"></div>
+        <div class="progresswrap" id="progresswrap">
+          <div class="progresshead"><span id="progressLabel">Preparing demo…</span><span id="progressPercent">0%</span></div>
+          <div class="track"><div class="bar" id="progressbar"></div></div>
+        </div>
+      </form>
+      <div class="demo-note"><strong>Demo mode:</strong> this form records a local request only. It does not run Ansible, trigger GitHub Actions, or deploy to a server.</div>
     </div>
 
-    <div class="section">
-        <h2>Application Overview</h2>
-        <p class="activity">
-            Project: AutoDeploy Web Dashboard<br>
-            Technology: HTML, CSS and JavaScript<br>
-            Automation Tool: Ansible<br>
-            Deployment Target: Local development environment
-        </p>
+    <div class="panel">
+      <h2>Application information</h2>
+      <ul class="info-list">
+        <li><strong>Project</strong><span>AutoDeploy Web Dashboard</span></li>
+        <li><strong>Automation</strong><span>Ansible playbook: deploy.yml</span></li>
+        <li><strong>Publishing</strong><span>GitHub Pages</span></li>
+        <li><strong>Deployment trigger</strong><span>Not connected — demo mode</span></li>
+      </ul>
+      <button class="secondary" id="checkButton" type="button" style="margin-top:17px">Check dashboard</button>
+      <div class="result" id="checkResult" role="status" aria-live="polite"></div>
     </div>
+  </div>
 
-    <div class="section">
-        <h2>Activity Monitor</h2>
-        <p class="activity" id="activity">
-            Dashboard initialized successfully.
-        </p>
+  <div class="panel" style="margin-top:18px">
+    <div class="panelhead"><h2>Recent activity</h2><button class="linkbtn" data-page="activity">View all →</button></div>
+    <div id="recentLogs"><div class="empty">No demo requests yet. Prepare a deployment to begin.</div></div>
+  </div>
+</section>
 
-        <button onclick="checkStatus()">Check Application</button>
-        <p id="message"></p>
-    </div>
+<section class="page" id="page-deployments">
+  <h1>Deployments</h1><p class="subtitle">Requests recorded in this browser session.</p>
+  <div class="panel">
+    <div class="panelhead"><h2>Deployment records</h2><button class="linkbtn" data-page="overview">+ New request</button></div>
+    <div class="tablewrap"><table><thead><tr><th>ID</th><th>Environment</th><th>Version</th><th>Status</th><th>Time</th><th>Note</th></tr></thead><tbody id="deploymentRows"><tr><td colspan="6" class="empty">No requests recorded yet.</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<section class="page" id="page-environments">
+  <h1>Environments</h1><p class="subtitle">Choose an environment for your next demo request.</p>
+  <div class="stats">
+    <div class="card"><h3>Development</h3><div class="value green" style="font-size:20px">Available</div><div class="hint">Demo environment</div><button class="secondary choose-env" data-env="Development">Select</button></div>
+    <div class="card"><h3>Testing</h3><div class="value blue" style="font-size:20px">Available</div><div class="hint">Demo environment</div><button class="secondary choose-env" data-env="Testing">Select</button></div>
+    <div class="card"><h3>Demo</h3><div class="value purple" style="font-size:20px">Available</div><div class="hint">Demo environment</div><button class="secondary choose-env" data-env="Demo">Select</button></div>
+    <div class="card"><h3>Production</h3><div class="value" style="font-size:20px;color:#fcd34d">Simulation only</div><div class="hint">No real production deployment</div><button class="secondary choose-env" data-env="Production (simulation only)">Select</button></div>
+  </div>
+  <div class="demo-note">These environment labels are not connected to real servers.</div>
+</section>
+
+<section class="page" id="page-activity">
+  <h1>Activity Logs</h1><p class="subtitle">Events recorded by the dashboard demo.</p>
+  <div class="panel"><div class="panelhead"><h2>All activity</h2><button class="linkbtn" id="clearLogs">Clear logs</button></div><div id="allLogs"><div class="empty">No activity recorded yet.</div></div></div>
+</section>
+
+<section class="page" id="page-settings">
+  <h1>Settings</h1><p class="subtitle">Project details and demo preferences.</p>
+  <div class="panel">
+    <div class="settingsrow"><div><strong>Demo mode</strong><p>Deployment actions are simulated locally in this page.</p></div><span class="tag demo">Enabled</span></div>
+    <div class="settingsrow"><div><strong>GitHub Actions trigger</strong><p>The dashboard button is not connected to the workflow.</p></div><span class="tag demo">Not connected</span></div>
+    <div class="settingsrow"><div><strong>Project repository</strong><p>View the source and workflow runs.</p></div><a href="https://github.com/Nivetha-C1607/AutoDeploy-Ansible-WebApp" target="_blank" rel="noopener noreferrer" style="color:var(--teal)">Open GitHub ↗</a></div>
+    <div class="settingsrow"><div><strong>Reset demo records</strong><p>Clear deployment history and reset the counters.</p></div><button class="secondary" id="resetButton">Reset records</button></div>
+  </div>
+</section>
 </main>
+</div>
 
-<footer>
-    AutoDeploy Dashboard | Automated Deployment Project
-</footer>
+<footer>AutoDeploy Dashboard · HTML, CSS and JavaScript · Frontend demo</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-function checkStatus() {
-    const status = document.getElementById("appStatus");
-    const activity = document.getElementById("activity");
-    const message = document.getElementById("message");
+(() => {
+  const $ = id => document.getElementById(id);
+  let records = [], nextId = 1, busy = false;
 
-    status.textContent = "Ready";
-    status.style.color = "#5eead4";
+  const stamp = date => date.toLocaleString([], {
+    month:"short", day:"numeric", hour:"2-digit", minute:"2-digit"
+  });
 
-    activity.textContent =
-        "Application check completed successfully.";
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    })[ch]);
+  }
 
-    message.textContent =
-        "✓ Dashboard is responding to your interaction!";
-}
+  function toast(message) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => el.classList.remove("show"), 3000);
+  }
+
+  function navigate(page) {
+    document.querySelectorAll(".page").forEach(section => {
+      section.classList.toggle("active", section.id === "page-" + page);
+    });
+    document.querySelectorAll(".navbtn").forEach(button => {
+      button.classList.toggle("active", button.dataset.page === page);
+    });
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+
+  document.querySelectorAll("[data-page]").forEach(button => {
+    button.addEventListener("click", () => navigate(button.dataset.page));
+  });
+
+  document.querySelectorAll(".choose-env").forEach(button => {
+    button.addEventListener("click", () => {
+      $("environment").value = button.dataset.env;
+      navigate("overview");
+      toast("Selected " + button.dataset.env + " demo environment.");
+    });
+  });
+
+  function logHTML(record) {
+    const css = record.status === "Success" ? "success" :
+      record.status === "Running" ? "running" : "demo";
+
+    return `<div class="logrow">
+      <span class="tag ${css}">${escapeHTML(record.status)}</span>
+      <span><strong>${escapeHTML(record.message)}</strong><br>
+      <span class="hint">Target: ${escapeHTML(record.environment)} · Version: ${escapeHTML(record.version)}${record.note ? " · " + escapeHTML(record.note) : ""}</span></span>
+      <span class="logtime">${stamp(record.date)}</span>
+    </div>`;
+  }
+
+  function render() {
+    $("total").textContent = records.length;
+    $("success").textContent = records.filter(r => r.status === "Success").length;
+    $("failed").textContent = records.filter(r => r.status === "Failed").length;
+
+    $("recentLogs").innerHTML = records.length
+      ? records.slice(0,4).map(logHTML).join("")
+      : '<div class="empty">No demo requests yet. Prepare a deployment to begin.</div>';
+
+    $("allLogs").innerHTML = records.length
+      ? records.map(logHTML).join("")
+      : '<div class="empty">No activity recorded yet.</div>';
+
+    $("deploymentRows").innerHTML = records.length
+      ? records.map(r => `<tr>
+          <td>#${r.id}</td><td>${escapeHTML(r.environment)}</td>
+          <td>${escapeHTML(r.version)}</td>
+          <td><span class="tag ${r.status === "Success" ? "success" : "running"}">${r.status}</span></td>
+          <td>${stamp(r.date)}</td><td>${escapeHTML(r.note || "—")}</td>
+        </tr>`).join("")
+      : '<tr><td colspan="6" class="empty">No requests recorded yet.</td></tr>';
+  }
+
+  const stages = [
+    { label:"Preparing demo request…", percent:20 },
+    { label:"Simulating Ansible step…", percent:48 },
+    { label:"Simulating application verification…", percent:78 },
+    { label:"Demo completed", percent:100 }
+  ];
+
+  $("deployForm").addEventListener("submit", event => {
+    event.preventDefault();
+    if (busy) return;
+
+    const environment = $("environment").value;
+    const version = $("version").value.trim();
+    const note = $("note").value.trim();
+    if (!version) { $("version").focus(); return; }
+
+    busy = true;
+    $("deployButton").disabled = true;
+    $("result").className = "result info show";
+    $("result").textContent = "Demo simulation started. No real deployment has been triggered.";
+    $("progresswrap").classList.add("show");
+    $("progressbar").style.width = "0%";
+
+    const record = {
+      id:nextId++, environment, version, note, date:new Date(),
+      status:"Running", message:"Demo deployment started"
+    };
+    records.unshift(record);
+    render();
+
+    let index = 0;
+    function advance() {
+      const stage = stages[index];
+      $("progressLabel").textContent = stage.label;
+      $("progressPercent").textContent = stage.percent + "%";
+      $("progressbar").style.width = stage.percent + "%";
+
+      if (index < stages.length - 1) {
+        index++;
+        setTimeout(advance, 850);
+      } else {
+        record.status = "Success";
+        record.message = "Demo simulation completed (no real deployment)";
+        render();
+        $("result").className = "result ok show";
+        $("result").textContent =
+          "✓ Demo completed for " + environment + " · " + version +
+          ". This was a simulation only; Ansible was not run.";
+        $("deployButton").disabled = false;
+        busy = false;
+        toast("Demo simulation completed. No real server was changed.");
+      }
+    }
+    setTimeout(advance, 500);
+  });
+
+  $("checkButton").addEventListener("click", () => {
+    $("checkResult").className = "result ok show";
+    $("checkResult").textContent =
+      "✓ Dashboard JavaScript is responding. This check does not contact a server.";
+    toast("Dashboard interaction check passed.");
+  });
+
+  $("clearLogs").addEventListener("click", () => {
+    records = [];
+    render();
+    toast("Activity logs cleared.");
+  });
+
+  $("resetButton").addEventListener("click", () => {
+    if (busy) { toast("Wait for the current demo to finish first."); return; }
+    records = [];
+    nextId = 1;
+    render();
+    $("result").className = "result";
+    $("progresswrap").classList.remove("show");
+    toast("Demo records reset.");
+  });
+
+  render();
+})();
 </script>
-
 </body>
 </html>
