@@ -4,230 +4,371 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AutoDeploy | Deployment Dashboard</title>
-
+<title>AutoDeploy | Smart Deployment Dashboard</title>
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root {
+  --bg: #0b1120;
+  --panel: #111b2e;
+  --border: #263449;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --accent: #5eead4;
+  --purple: #c4b5fd;
+  --danger: #fca5a5;
 }
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    font-family: Arial, sans-serif;
-    background: #0b1120;
-    color: #e5e7eb;
-    min-height: 100vh;
+  font-family: Inter, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
 }
-
-header {
-    padding: 22px 7%;
-    background: #111b2e;
-    border-bottom: 1px solid #263449;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
-
-.logo {
-    color: #5eead4;
-    font-size: 25px;
-    font-weight: bold;
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 235px;
+  flex-shrink: 0;
+  padding: 25px 16px;
+  background: #0e1728;
+  border-right: 1px solid var(--border);
 }
-
-.badge {
-    background: #123b35;
-    color: #5eead4;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 13px;
+.brand { font-size: 22px; font-weight: 800; color: var(--accent); padding: 8px 10px 30px; }
+.nav-label { color: #64748b; font-size: 11px; text-transform: uppercase; padding: 15px 10px 8px; letter-spacing: 1px; }
+.nav-btn {
+  width: 100%; text-align: left; padding: 12px;
+  border: 0; border-radius: 8px; background: transparent;
+  color: var(--muted); margin: 3px 0;
 }
-
-main {
-    max-width: 1100px;
-    margin: 50px auto;
-    padding: 0 22px;
+.nav-btn:hover, .nav-btn.active { background: #1c2b40; color: var(--accent); }
+.sidebar-note { margin: 35px 8px 0; color: #64748b; font-size: 12px; line-height: 1.7; }
+main { flex: 1; min-width: 0; }
+.topbar {
+  min-height: 76px; padding: 18px 30px; display: flex;
+  align-items: center; justify-content: space-between; gap: 15px;
+  border-bottom: 1px solid var(--border); background: var(--panel);
 }
-
-h1 {
-    font-size: 34px;
-    margin-bottom: 12px;
+.topbar small { display: block; color: var(--muted); margin-top: 5px; }
+.online { color: var(--accent); font-size: 13px; }
+.content { max-width: 1400px; padding: 30px; margin: auto; }
+.page { display: none; }
+.page.active { display: block; }
+h1 { font-size: clamp(25px, 3vw, 32px); margin-bottom: 9px; }
+.subtitle { color: var(--muted); line-height: 1.6; margin-bottom: 25px; }
+.section-title { font-size: 18px; margin-bottom: 16px; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; }
+.card, .panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 13px; padding: 22px; min-width: 0;
 }
-
-.subtitle {
-    color: #94a3b8;
-    margin-bottom: 35px;
-    line-height: 1.6;
+.card-label { color: var(--muted); font-size: 13px; }
+.card-value { font-size: 27px; font-weight: 750; margin-top: 15px; overflow-wrap: anywhere; }
+.card-note { font-size: 12px; color: var(--muted); margin-top: 9px; }
+.green { color: var(--accent); }
+.purple { color: var(--purple); }
+.red { color: var(--danger); }
+.two-col { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; margin-top: 20px; }
+.panel { margin-top: 20px; }
+.two-col .panel { margin-top: 0; }
+.activity-list { list-style: none; }
+.activity-list li { padding: 14px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+.activity-list li:last-child { border-bottom: 0; }
+.activity-list small { display: block; color: var(--muted); margin-top: 5px; }
+.status { display: inline-block; border-radius: 20px; padding: 5px 9px; font-size: 11px; background: #123b35; color: var(--accent); }
+.status.pending { background: #382d16; color: #fcd34d; }
+.status.failed { background: #451e2a; color: var(--danger); }
+.btn {
+  border: 0; border-radius: 8px; padding: 11px 15px;
+  background: #0d9488; color: white; font-weight: 650;
 }
-
-.cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+.btn:hover { background: #0f766e; }
+.btn.secondary { background: #263449; }
+.btn.secondary:hover { background: #334155; }
+.btn.danger { background: #7f1d1d; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label { font-size: 13px; color: var(--muted); }
+.field input, .field select {
+  width: 100%; min-height: 43px; padding: 10px;
+  color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px;
 }
-
-.card {
-    background: #111b2e;
-    border: 1px solid #263449;
-    padding: 25px;
-    border-radius: 14px;
+.notice { color: var(--muted); font-size: 13px; line-height: 1.7; margin-top: 15px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 530px; text-align: left; }
+th, td { border-bottom: 1px solid var(--border); padding: 14px 12px; font-size: 13px; }
+th { color: var(--muted); font-weight: 500; }
+td { overflow-wrap: anywhere; }
+.empty { padding: 25px 0; color: var(--muted); }
+.message { margin-top: 15px; font-size: 13px; line-height: 1.6; color: var(--accent); }
+footer { color: #64748b; font-size: 12px; text-align: center; padding: 25px; }
+@media (max-width: 1000px) {
+  .grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .two-col { grid-template-columns: 1fr; }
 }
-
-.card h3 {
-    color: #94a3b8;
-    font-size: 15px;
-    margin-bottom: 18px;
-}
-
-.value {
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.green {
-    color: #5eead4;
-}
-
-.purple {
-    color: #c4b5fd;
-}
-
-.section {
-    background: #111b2e;
-    border: 1px solid #263449;
-    padding: 25px;
-    margin-top: 25px;
-    border-radius: 14px;
-}
-
-.section h2 {
-    font-size: 19px;
-    margin-bottom: 18px;
-}
-
-.activity {
-    color: #94a3b8;
-    line-height: 2;
-    font-size: 14px;
-}
-
-button {
-    background: #0d9488;
-    color: white;
-    padding: 12px 22px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    margin-top: 20px;
-}
-
-button:hover {
-    background: #0f766e;
-}
-
-#message {
-    color: #5eead4;
-    margin-top: 15px;
-    font-size: 14px;
-}
-
-footer {
-    text-align: center;
-    padding: 25px;
-    color: #64748b;
-    font-size: 13px;
-}
-
-@media (max-width: 600px) {
-    header {
-        padding: 18px;
-        gap: 12px;
-    }
-
-    .logo {
-        font-size: 21px;
-    }
-
-    h1 {
-        font-size: 27px;
-    }
+@media (max-width: 650px) {
+  .layout { display: block; }
+  .sidebar { width: 100%; padding: 12px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .brand { padding: 8px 8px 15px; }
+  .nav-label, .sidebar-note { display: none; }
+  .nav-list { display: flex; overflow-x: auto; gap: 5px; }
+  .nav-btn { width: auto; white-space: nowrap; margin: 0; }
+  .topbar { padding: 16px; }
+  .content { padding: 20px 14px; }
+  .grid { gap: 10px; }
+  .card, .panel { padding: 16px; }
+  .card-value { font-size: 22px; }
+  .form-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
-
 <body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">⚡ AutoDeploy</div>
+    <div class="nav-label">Workspace</div>
+    <nav class="nav-list" aria-label="Main navigation">
+      <button class="nav-btn active" data-page="overview">▦ Overview</button>
+      <button class="nav-btn" data-page="deployments">🚀 Deployments</button>
+      <button class="nav-btn" data-page="environments">▣ Environments</button>
+      <button class="nav-btn" data-page="activity">◷ Activity Logs</button>
+      <button class="nav-btn" data-page="settings">⚙ Settings</button>
+    </nav>
+    <div class="sidebar-note">
+      SMART DEPLOYMENT PLATFORM<br>
+      Powered by Ansible + GitHub Actions
+    </div>
+  </aside>
 
-<header>
-    <div class="logo">⚡ AutoDeploy</div>
-    <div class="badge">● Dashboard Online</div>
-</header>
+  <main>
+    <header class="topbar">
+      <div><strong id="topTitle">Overview</strong><small>AutoDeploy / Smart Deployment Dashboard</small></div>
+      <div class="online">● Website online</div>
+    </header>
 
-<main>
-    <h1>Deployment Dashboard</h1>
-    <p class="subtitle">
-        Monitor your application deployment in one place.
-        Simple, organized, and powered by automation.
-    </p>
-
-    <div class="cards">
-        <div class="card">
-            <h3>Deployment Method</h3>
-            <div class="value green">Ansible</div>
+    <div class="content">
+      <section class="page active" id="overview">
+        <h1>Deployment Overview</h1>
+        <p class="subtitle">Monitor your deployment workflow from one place.</p>
+        <div class="grid">
+          <div class="card"><div class="card-label">Recorded deployments</div><div class="card-value" id="totalCount">0</div><div class="card-note">This browser session</div></div>
+          <div class="card"><div class="card-label">Successful runs</div><div class="card-value green" id="successCount">0</div><div class="card-note">Recorded successful runs</div></div>
+          <div class="card"><div class="card-label">Failed runs</div><div class="card-value red" id="failureCount">0</div><div class="card-note">Recorded failed runs</div></div>
+          <div class="card"><div class="card-label">Deployment tool</div><div class="card-value purple">Ansible</div><div class="card-note">GitHub Actions workflow</div></div>
         </div>
 
-        <div class="card">
-            <h3>Application Status</h3>
-            <div class="value green" id="appStatus">Ready</div>
+        <div class="two-col">
+          <div class="panel">
+            <h2 class="section-title">Quick deployment</h2>
+            <p class="subtitle">Choose an environment and version to prepare a deployment request.</p>
+            <form id="deployForm">
+              <div class="form-grid">
+                <div class="field"><label for="environment">Environment</label>
+                  <select id="environment"><option>Development</option><option>Testing</option><option>Production</option></select>
+                </div>
+                <div class="field"><label for="version">Version / release</label>
+                  <input id="version" value="v1.0.0" maxlength="40" required>
+                </div>
+              </div>
+              <div class="actions"><button class="btn" type="submit">Prepare deployment</button></div>
+              <p class="message" id="formMessage" role="status"></p>
+            </form>
+            <p class="notice">Demo mode: this form records a local request only. It does not run Ansible or deploy to a server.</p>
+          </div>
+          <div class="panel">
+            <h2 class="section-title">Application information</h2>
+            <ul class="activity-list">
+              <li>Project <small>AutoDeploy Web Dashboard</small></li>
+              <li>Automation <small>Ansible playbook: deploy.yml</small></li>
+              <li>Publishing <small>GitHub Pages</small></li>
+              <li>Deployment trigger <small>Not connected yet</small></li>
+            </ul>
+            <div class="actions"><button class="btn secondary" id="checkBtn" type="button">Check dashboard</button></div>
+            <p class="message" id="checkMessage" role="status"></p>
+          </div>
         </div>
 
-        <div class="card">
-            <h3>Environment</h3>
-            <div class="value purple">Development</div>
+        <div class="panel">
+          <h2 class="section-title">Recent activity</h2>
+          <ul class="activity-list" id="recentList"><li>No deployment requests recorded yet.<small>Prepare a request to see it here.</small></li></ul>
         </div>
+      </section>
+
+      <section class="page" id="deployments">
+        <h1>Deployments</h1>
+        <p class="subtitle">Review requests created during this browser session.</p>
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Release</th><th>Environment</th><th>Time</th><th>Status</th></tr></thead>
+              <tbody id="deploymentRows"><tr><td colspan="4" class="empty">No requests yet.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="environments">
+        <h1>Environments</h1>
+        <p class="subtitle">Review the intended targets for your deployment workflow.</p>
+        <div class="grid">
+          <div class="card"><div class="card-label">Development</div><div class="card-value green">DEV</div><div class="card-note">For development and demos</div></div>
+          <div class="card"><div class="card-label">Testing</div><div class="card-value purple">TEST</div><div class="card-note">For pre-release validation</div></div>
+          <div class="card"><div class="card-label">Production</div><div class="card-value">PROD</div><div class="card-note">Requires controlled deployment</div></div>
+          <div class="card"><div class="card-label">Automation</div><div class="card-value">Ansible</div><div class="card-note">Current playbook target must be configured separately</div></div>
+        </div>
+        <div class="panel"><h2 class="section-title">Environment safety</h2><p class="notice">These are dashboard labels, not verified servers. Configure and validate actual hosts in Ansible inventory before deploying to any environment.</p></div>
+      </section>
+
+      <section class="page" id="activity">
+        <h1>Activity Logs</h1>
+        <p class="subtitle">Local demo activity generated by this dashboard.</p>
+        <div class="panel"><ul class="activity-list" id="logList"><li>No activity recorded yet.</li></ul></div>
+        <div class="actions"><button class="btn secondary" id="clearBtn" type="button">Clear local history</button></div>
+        <p class="notice">This log is stored only in the current page session. It is not a live GitHub Actions log.</p>
+      </section>
+
+      <section class="page" id="settings">
+        <h1>Settings</h1>
+        <p class="subtitle">Project links and integration status.</p>
+        <div class="panel">
+          <h2 class="section-title">Project integrations</h2>
+          <ul class="activity-list">
+            <li>GitHub repository<small><a href="https://github.com/Nivetha-C1607/AutoDeploy-Ansible-WebApp" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">Open repository ↗</a></small></li>
+            <li>GitHub Pages<small><a href="https://nivetha-c1607.github.io/AutoDeploy-Ansible-WebApp/" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">Open published website ↗</a></small></li>
+            <li>Ansible trigger<small>Not configured — secure integration required</small></li>
+            <li>Live workflow status<small>Not connected — values shown in this dashboard are demo data</small></li>
+          </ul>
+        </div>
+      </section>
     </div>
-
-    <div class="section">
-        <h2>Application Overview</h2>
-        <p class="activity">
-            Project: AutoDeploy Web Dashboard<br>
-            Technology: HTML, CSS and JavaScript<br>
-            Automation Tool: Ansible<br>
-            Deployment Target: Local development environment
-        </p>
-    </div>
-
-    <div class="section">
-        <h2>Activity Monitor</h2>
-        <p class="activity" id="activity">
-            Dashboard initialized successfully.
-        </p>
-
-        <button onclick="checkStatus()">Check Application</button>
-        <p id="message"></p>
-    </div>
-</main>
-
-<footer>
-    AutoDeploy Dashboard | Automated Deployment Project
-</footer>
+    <footer>AutoDeploy · Smart Deployment Dashboard · Ansible + GitHub Actions</footer>
+  </main>
+</div>
 
 <script>
-function checkStatus() {
-    const status = document.getElementById("appStatus");
-    const activity = document.getElementById("activity");
-    const message = document.getElementById("message");
+const records = [];
+const titles = {
+  overview: "Overview",
+  deployments: "Deployments",
+  environments: "Environments",
+  activity: "Activity Logs",
+  settings: "Settings"
+};
 
-    status.textContent = "Ready";
-    status.style.color = "#5eead4";
+document.querySelectorAll(".nav-btn").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".nav-btn").forEach(item => item.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+    button.classList.add("active");
+    document.getElementById(button.dataset.page).classList.add("active");
+    document.getElementById("topTitle").textContent = titles[button.dataset.page];
+  });
+});
 
-    activity.textContent =
-        "Application check completed successfully.";
-
-    message.textContent =
-        "✓ Dashboard is responding to your interaction!";
+function now() {
+  return new Date().toLocaleString();
 }
-</script>
 
+function addLog(title, detail) {
+  const item = document.createElement("li");
+  item.append(document.createTextNode(title));
+  const small = document.createElement("small");
+  small.textContent = detail + " · " + now();
+  item.appendChild(small);
+  const list = document.getElementById("logList");
+  if (list.children.length === 1 && list.textContent.includes("No activity recorded")) {
+    list.replaceChildren();
+  }
+  list.prepend(item);
+  const recent = document.getElementById("recentList");
+  if (recent.children.length === 1 && recent.textContent.includes("No deployment requests")) {
+    recent.replaceChildren();
+  }
+  recent.prepend(item.cloneNode(true));
+}
+
+function renderRecords() {
+  document.getElementById("totalCount").textContent = records.length;
+  document.getElementById("successCount").textContent =
+    records.filter(record => record.status === "Demo request").length;
+  document.getElementById("failureCount").textContent = "0";
+
+  const tbody = document.getElementById("deploymentRows");
+  tbody.replaceChildren();
+
+  if (!records.length) {
+    const row = tbody.insertRow();
+    const cell = row.insertCell();
+    cell.colSpan = 4;
+    cell.className = "empty";
+    cell.textContent = "No requests yet.";
+    return;
+  }
+
+  [...records].reverse().forEach(record => {
+    const row = tbody.insertRow();
+    [record.version, record.environment, record.time, record.status].forEach((value, index) => {
+      const cell = row.insertCell();
+      if (index === 3) {
+        const badge = document.createElement("span");
+        badge.className = "status pending";
+        badge.textContent = value;
+        cell.appendChild(badge);
+      } else {
+        cell.textContent = value;
+      }
+    });
+  });
+}
+
+document.getElementById("deployForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const environment = document.getElementById("environment").value;
+  const version = document.getElementById("version").value.trim();
+  if (!version) return;
+
+  records.push({
+    environment,
+    version,
+    time: now(),
+    status: "Demo request"
+  });
+
+  renderRecords();
+  addLog("Deployment request prepared", version + " · " + environment);
+  document.getElementById("formMessage").textContent =
+    "Request recorded locally. No real deployment was triggered.";
+});
+
+document.getElementById("checkBtn").addEventListener("click", () => {
+  document.getElementById("checkMessage").textContent =
+    "Dashboard JavaScript is responding. Server health has not been checked.";
+  addLog("Dashboard interaction checked", "Browser-side check only");
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  records.length = 0;
+  renderRecords();
+  document.getElementById("logList").replaceChildren();
+  document.getElementById("recentList").replaceChildren();
+
+  const logEmpty = document.createElement("li");
+  logEmpty.textContent = "No activity recorded yet.";
+  document.getElementById("logList").appendChild(logEmpty);
+
+  const recentEmpty = document.createElement("li");
+  recentEmpty.textContent = "No deployment requests recorded yet.";
+  document.getElementById("recentList").appendChild(recentEmpty);
+
+  document.getElementById("formMessage").textContent = "";
+  document.getElementById("checkMessage").textContent = "";
+});
+</script>
 </body>
 </html>
